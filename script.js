@@ -81,7 +81,7 @@ for (var i = 0; i < purchasedStocks.length; i++) {
       `</td class=button-container><td class="qty-i">` +
       purchasedStocks[i].quantity +
       `</td><td class=paid-i>` +
-      purchasedStocks[i].stockPrice +
+      formatter.format(purchasedStocks[i].stockPrice) +
       `</td >
       <td><input class="sale-price" 
       id="sp-` +
@@ -111,17 +111,28 @@ $(function () {
 //use event delegation to set the appropriate tax paid and net income based on row
 //use keyup to dynamically populate the price on each key stroke rather than using a button
 $(function () {
+  //check to ensure a tax bracket was selected
   $("body").delegate(".sale-price", "keyup", function (event) {
+    if (myBracket == undefined) {
+      alert("You must select a bracket on the left first!");
+      $(this).val("");
+      $(":focus").blur();
+      return;
+    }
     //create variables for the elements in the current row where sale price is being updated
     var thisSalePrice = $(this).val();
     var thisQty = $(this).parent().siblings(".qty-i").text();
     var thisPurchasePrice = $(this).parent().siblings(".paid-i").text();
     //calculate the taxes and net income formatting as currency
+
     var thisTaxPaid =
-      (thisQty * thisSalePrice - thisQty * thisPurchasePrice) *
+      (thisQty * thisSalePrice -
+        thisQty * parseFloat(thisPurchasePrice.substring(1))) *
       parseFloat(myBracket);
     var thisNetIncome =
-      thisSalePrice * thisQty - thisPurchasePrice * thisQty - thisTaxPaid;
+      thisSalePrice * thisQty -
+      parseFloat(thisPurchasePrice.substring(1)) * thisQty -
+      thisTaxPaid;
     $(this).parent().siblings(".tax-i").text(formatter.format(thisTaxPaid));
 
     //Update the value of the net income in the row
@@ -142,6 +153,7 @@ $.ajax({
 }).then(function (response) {
   //redoing the logic to populate into elements instead of generating
   //elements dynamically with javascript
+
   $("#col2-row2-btn").text(
     formatter.format(response.single.income_tax_brackets[0].bracket)
   );
@@ -194,7 +206,7 @@ function addRowFromBuy() {
       `</td class=button-container><td class="qty-i">` +
       purchasedStocks[purchasedStocks.length - 1].quantity +
       `</td><td class=paid-i>` +
-      purchasedStocks[purchasedStocks.length - 1].stockPrice +
+      formatter.format(purchasedStocks[purchasedStocks.length - 1].stockPrice) +
       `</td >
       <td><input class="sale-price" 
       id="sp-` +
